@@ -1,0 +1,9 @@
+version: "3.8"
+services:
+  ultihats:
+    build: ./
+    container_name: ultihats_api
+    ports:
+      - ${PORT}:${PORT}
+    volumes:
+      - .:/api
