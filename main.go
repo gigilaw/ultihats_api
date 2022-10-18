@@ -1,28 +1,22 @@
 package main
 
 import (
-	"fmt"
-	"log"
-
+	"github.com/gigilaw/ultihats/config"
+	"github.com/gigilaw/ultihats/initalizers"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
 
 func init() {
-	err := godotenv.Load()
-
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	initalizers.LoadEnvVariables()
+	initalizers.ConnectDB()
 }
 
 func main() {
 	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "hello",
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(constants.HTTP_SUCCESS, gin.H{
+			"message": "Welcome to UltiHats! Work in progress~",
 		})
 	})
-	fmt.Println("running")
 	r.Run()
 }
