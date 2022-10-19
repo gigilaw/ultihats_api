@@ -1,10 +1,12 @@
 package main
 
 import (
-	"github.com/gigilaw/ultihats/config"
 	"github.com/gigilaw/ultihats/initalizers"
+	"github.com/gigilaw/ultihats/routes"
 	"github.com/gin-gonic/gin"
 )
+
+var router *gin.Engine
 
 func init() {
 	initalizers.LoadEnvVariables()
@@ -12,11 +14,7 @@ func init() {
 }
 
 func main() {
-	r := gin.Default()
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(constants.HTTP_SUCCESS, gin.H{
-			"message": "Welcome to UltiHats! Work in progress~",
-		})
-	})
-	r.Run()
+	router = gin.Default()
+	routes.ApiRoutes(router)
+	router.Run()
 }
