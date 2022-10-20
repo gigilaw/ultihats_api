@@ -1,15 +1,15 @@
 package main
 
 import (
-	"github.com/gigilaw/ultihats/initalizers"
+	"github.com/gigilaw/ultihats/initializers"
 	"github.com/gigilaw/ultihats/models"
 )
 
 func init() {
-	initalizers.LoadEnvVariables()
-	initalizers.ConnectDB()
+	initializers.LoadEnvVariables()
+	initializers.ConnectDB()
 }
 
 func main() {
-	initalizers.DB.AutoMigrate(&models.User{})
+	initializers.DB.AutoMigrate(&models.User{})
 }

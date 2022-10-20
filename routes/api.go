@@ -15,4 +15,5 @@ func ApiRoutes(router *gin.Engine) {
 	})
 
 	router.POST("/register/email", controllers.UserEmailRegister)
+	router.POST("/login", controllers.UserLogin)
 }

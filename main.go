@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gigilaw/ultihats/initalizers"
+	"github.com/gigilaw/ultihats/initializers"
 	"github.com/gigilaw/ultihats/routes"
 	"github.com/gin-gonic/gin"
 )
@@ -9,8 +9,8 @@ import (
 var router *gin.Engine
 
 func init() {
-	initalizers.LoadEnvVariables()
-	initalizers.ConnectDB()
+	initializers.LoadEnvVariables()
+	initializers.ConnectDB()
 }
 
 func main() {
