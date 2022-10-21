@@ -2,11 +2,8 @@ package main
 
 import (
 	"github.com/gigilaw/ultihats/initializers"
-	"github.com/gigilaw/ultihats/routes"
-	"github.com/gin-gonic/gin"
+	"github.com/gigilaw/ultihats/models"
 )
-
-var router *gin.Engine
 
 func init() {
 	initializers.LoadEnvVariables()
@@ -14,7 +11,5 @@ func init() {
 }
 
 func main() {
-	router = gin.Default()
-	routes.ApiRoutes(router)
-	router.Run()
+	initializers.DB.AutoMigrate(&models.User{})
 }
