@@ -5,6 +5,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/gigilaw/ultihats/config"
+	"github.com/gigilaw/ultihats/handlers"
 	"github.com/gigilaw/ultihats/initializers"
 	"github.com/gigilaw/ultihats/models"
 	"github.com/gin-gonic/gin"
@@ -24,15 +26,13 @@ func UserEmailRegister(c *gin.Context) {
 		CommonName string
 	}
 	if err := c.ShouldBind(&newUser); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"validation_error": err.Error()})
+		handlers.Error(c, http.StatusBadRequest, config.ERROR_VALIDATION["message"], err.Error())
 		return
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), 10)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Failed to hash password",
-		})
+		handlers.Error(c, http.StatusBadRequest, "ERROR_HASH_PASSWORD", "Failed to hash password")
 		return
 	}
 
@@ -48,7 +48,7 @@ func UserEmailRegister(c *gin.Context) {
 	}
 
 	if result := initializers.DB.Create(&user); result.Error != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": result.Error.Error()})
+		handlers.Error(c, http.StatusBadRequest, config.ERROR_DATABASE["message"], result.Error.Error())
 		return
 	}
 
@@ -62,25 +62,14 @@ func UserLogin(c *gin.Context) {
 	}
 
 	if err := c.ShouldBind(&login); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"validation_error": err.Error()})
+		handlers.Error(c, http.StatusBadRequest, config.ERROR_VALIDATION["message"], err.Error())
 		return
 	}
 	var user models.User
 	initializers.DB.First(&user, "email = ?", login.Email)
 
-	if user.ID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid email or password",
-		})
-		return
-	}
-
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(login.Password))
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid email or password",
-		})
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(login.Password)); err != nil || user.ID == 0 {
+		handlers.Error(c, http.StatusUnauthorized, config.ERROR_INVALID_LOGIN["message"], config.ERROR_INVALID_LOGIN["details"])
 		return
 	}
 
@@ -92,9 +81,8 @@ func UserLogin(c *gin.Context) {
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Failed to create token",
-		})
+		handlers.Error(c, http.StatusBadRequest, "ERROR_CREATE_TOKEN", "Failed to create token")
+
 		return
 	}
 
