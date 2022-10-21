@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gigilaw/ultihats/config"
 	"github.com/gigilaw/ultihats/initializers"
 	"github.com/gigilaw/ultihats/models"
 	"github.com/gin-gonic/gin"
@@ -16,7 +17,7 @@ func JWTAuth(c *gin.Context) {
 	tokenString, err := c.Cookie("Authorization")
 
 	if err != nil {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": config.ERROR_USER_LOGIN})
 	}
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
