@@ -18,7 +18,7 @@ func JWTAuth(c *gin.Context) {
 	tokenString, err := c.Cookie("Authorization")
 
 	if err != nil {
-		handlers.Error(c, http.StatusUnauthorized, config.ERROR_USER_LOGIN["message"], config.ERROR_USER_LOGIN["details"])
+		c.AbortWithStatusJSON(http.StatusUnauthorized, handlers.ErrorMessage(config.ERROR_USER_LOGIN["message"], config.ERROR_USER_LOGIN["details"]))
 	}
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {

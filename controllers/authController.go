@@ -15,40 +15,45 @@ import (
 )
 
 func UserEmailRegister(c *gin.Context) {
-	var newUser struct {
+	var newUserBody struct {
 		FirstName  string `binding:"required"`
 		LastName   string `binding:"required"`
 		Height     int    `binding:"required"`
 		Gender     string `binding:"required"`
 		Email      string `binding:"required,email"`
 		Password   string `binding:"required,alphanum,min=8"`
+		CommonName string `binding:"omitempty,alpha"`
 		Birthday   string `binding:"required"`
-		CommonName string
 	}
-	if err := c.ShouldBind(&newUser); err != nil {
-		handlers.Error(c, http.StatusBadRequest, config.ERROR_VALIDATION["message"], err.Error())
+	if err := c.ShouldBind(&newUserBody); err != nil {
+		c.JSON(http.StatusBadRequest, handlers.ErrorMessage(config.ERROR_VALIDATION["message"], err.Error()))
 		return
 	}
-	hash, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), 10)
-
+	passwordHash, err := models.HashPassword(newUserBody.Password)
 	if err != nil {
-		handlers.Error(c, http.StatusBadRequest, "ERROR_HASH_PASSWORD", "Failed to hash password")
+		c.JSON(http.StatusBadRequest, handlers.ErrorMessage("ERROR_HASH_PASSWORD", "Failed to hash password"))
+		return
+	}
+
+	birthday, err := models.ParseBirthday(newUserBody.Birthday)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, handlers.ErrorMessage("ERROR_PARSE_BIRTHDAY", "Failed to parse birthday"))
 		return
 	}
 
 	user := models.User{
-		FirstName:  newUser.FirstName,
-		LastName:   newUser.LastName,
-		Height:     newUser.Height,
-		Gender:     newUser.Gender,
-		Email:      newUser.Email,
-		Birthday:   newUser.Birthday,
-		CommonName: newUser.CommonName,
-		Password:   string(hash),
+		FirstName:  newUserBody.FirstName,
+		LastName:   newUserBody.LastName,
+		Height:     newUserBody.Height,
+		Gender:     newUserBody.Gender,
+		Email:      newUserBody.Email,
+		Birthday:   birthday,
+		CommonName: newUserBody.CommonName,
+		Password:   string(passwordHash),
 	}
 
 	if result := initializers.DB.Create(&user); result.Error != nil {
-		handlers.Error(c, http.StatusBadRequest, config.ERROR_DATABASE["message"], result.Error.Error())
+		c.JSON(http.StatusBadRequest, handlers.ErrorMessage(config.ERROR_DATABASE["message"], result.Error.Error()))
 		return
 	}
 
@@ -62,14 +67,14 @@ func UserLogin(c *gin.Context) {
 	}
 
 	if err := c.ShouldBind(&login); err != nil {
-		handlers.Error(c, http.StatusBadRequest, config.ERROR_VALIDATION["message"], err.Error())
+		c.JSON(http.StatusBadRequest, handlers.ErrorMessage(config.ERROR_VALIDATION["message"], err.Error()))
 		return
 	}
 	var user models.User
 	initializers.DB.First(&user, "email = ?", login.Email)
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(login.Password)); err != nil || user.ID == 0 {
-		handlers.Error(c, http.StatusUnauthorized, config.ERROR_INVALID_LOGIN["message"], config.ERROR_INVALID_LOGIN["details"])
+		c.JSON(http.StatusUnauthorized, handlers.ErrorMessage(config.ERROR_INVALID_LOGIN["message"], config.ERROR_INVALID_LOGIN["details"]))
 		return
 	}
 
@@ -81,8 +86,7 @@ func UserLogin(c *gin.Context) {
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 
 	if err != nil {
-		handlers.Error(c, http.StatusBadRequest, "ERROR_CREATE_TOKEN", "Failed to create token")
-
+		c.JSON(http.StatusBadRequest, handlers.ErrorMessage("ERROR_CREATE_TOKEN", "Failed to create token"))
 		return
 	}
 

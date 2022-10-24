@@ -18,9 +18,9 @@ func ApiRoutes(router *gin.Engine) {
 	router.POST("/register/email", controllers.UserEmailRegister)
 	router.POST("/login", controllers.UserLogin)
 
-	authorized := router.Group("/").Use(middleware.JWTAuth)
+	authenticated := router.Group("/").Use(middleware.JWTAuth)
 	{
-		authorized.GET("/user/:userID", controllers.GetUser)
-		authorized.POST("/user/:userID", controllers.UpdateUser)
+		authenticated.GET("/user/:userID", controllers.GetUser)
+		authenticated.POST("/user/:userID", middleware.AuthorizedUser, controllers.UpdateUser)
 	}
 }

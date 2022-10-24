@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
+	"time"
 
 	"github.com/gigilaw/ultihats/config"
 	"github.com/gigilaw/ultihats/handlers"
@@ -23,10 +23,61 @@ func GetUser(c *gin.Context) {
 }
 
 func UpdateUser(c *gin.Context) {
-	user, _ := c.Get("user")
-	userID, _ := strconv.ParseUint(c.Param("userID"), 0, 64)
+	userID := c.Param("userID")
 
-	if user.(models.User).ID != uint(userID) {
-		handlers.Error(c, http.StatusUnauthorized, config.ERROR_UNAUTHORIZED["message"], config.ERROR_UNAUTHORIZED["details"])
+	var updateUserBody struct {
+		FirstName  string `binding:"omitempty,alpha"`
+		LastName   string `binding:"omitempty,alpha"`
+		Height     int    `binding:"omitempty,numeric"`
+		Gender     string `binding:"omitempty,alpha"`
+		Email      string `binding:"omitempty,email"`
+		Password   string `binding:"omitempty,alphanum,min=8"`
+		CommonName string `binding:"omitempty,alpha"`
+		Birthday   string
 	}
+	if err := c.ShouldBind(&updateUserBody); err != nil {
+		c.JSON(http.StatusBadRequest, handlers.ErrorMessage(config.ERROR_VALIDATION["message"], err.Error()))
+		return
+	}
+
+	var birthday time.Time
+	if len(updateUserBody.Birthday) > 0 {
+		parsedBirthday, err := models.ParseBirthday(updateUserBody.Birthday)
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, handlers.ErrorMessage("ERROR_PARSE_BIRTHDAY", "Failed to parse birthday"))
+			return
+		}
+		birthday = parsedBirthday
+	}
+
+	var password string
+	if len(updateUserBody.Password) > 0 {
+		hashedPassword, err := models.HashPassword(updateUserBody.Password)
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, handlers.ErrorMessage("ERROR_PARSE_BIRTHDAY", "Failed to parse birthday"))
+			return
+		}
+		password = hashedPassword
+	}
+
+	updateUser := models.User{
+		FirstName:  updateUserBody.FirstName,
+		LastName:   updateUserBody.LastName,
+		Height:     updateUserBody.Height,
+		Gender:     updateUserBody.Gender,
+		Email:      updateUserBody.Email,
+		Birthday:   birthday,
+		CommonName: updateUserBody.CommonName,
+		Password:   password,
+	}
+
+	var user models.User
+	initializers.DB.First(&user, userID)
+	initializers.DB.Model(&user).Updates(updateUser)
+
+	c.JSON(http.StatusOK, gin.H{
+		"user": user,
+	})
 }
