@@ -8,14 +8,13 @@ import (
 	"github.com/gigilaw/ultihats/handlers"
 	"github.com/gigilaw/ultihats/initializers"
 	"github.com/gigilaw/ultihats/models"
+	"github.com/gigilaw/ultihats/validation"
 	"github.com/gin-gonic/gin"
 )
 
 func GetUser(c *gin.Context) {
-	userID := c.Param("userID")
 	var user models.User
-
-	initializers.DB.First(&user, userID)
+	initializers.DB.First(&user, c.Param("userID"))
 
 	c.JSON(http.StatusOK, gin.H{
 		"user": user,
@@ -25,16 +24,7 @@ func GetUser(c *gin.Context) {
 func UpdateUser(c *gin.Context) {
 	userID := c.Param("userID")
 
-	var updateUserBody struct {
-		FirstName  string `binding:"omitempty,alpha"`
-		LastName   string `binding:"omitempty,alpha"`
-		Height     int    `binding:"omitempty,numeric"`
-		Gender     string `binding:"omitempty,alpha"`
-		Email      string `binding:"omitempty,email"`
-		Password   string `binding:"omitempty,alphanum,min=8"`
-		CommonName string `binding:"omitempty,alpha"`
-		Birthday   string
-	}
+	updateUserBody := validation.UpdateUserBody
 	if err := c.ShouldBind(&updateUserBody); err != nil {
 		c.JSON(http.StatusBadRequest, handlers.ErrorMessage(config.ERROR_VALIDATION["message"], err.Error()))
 		return
@@ -45,7 +35,7 @@ func UpdateUser(c *gin.Context) {
 		parsedBirthday, err := models.ParseBirthday(updateUserBody.Birthday)
 
 		if err != nil {
-			c.JSON(http.StatusBadRequest, handlers.ErrorMessage("ERROR_PARSE_BIRTHDAY", "Failed to parse birthday"))
+			c.JSON(http.StatusBadRequest, handlers.ErrorMessage(config.ERROR_PARSE_BIRTHDAY["message"], config.ERROR_PARSE_BIRTHDAY["details"]))
 			return
 		}
 		birthday = parsedBirthday
@@ -56,21 +46,22 @@ func UpdateUser(c *gin.Context) {
 		hashedPassword, err := models.HashPassword(updateUserBody.Password)
 
 		if err != nil {
-			c.JSON(http.StatusBadRequest, handlers.ErrorMessage("ERROR_PARSE_BIRTHDAY", "Failed to parse birthday"))
+			c.JSON(http.StatusBadRequest, handlers.ErrorMessage(config.ERROR_HASH_PASSWORD["message"], config.ERROR_HASH_PASSWORD["details"]))
 			return
 		}
 		password = hashedPassword
 	}
 
 	updateUser := models.User{
-		FirstName:  updateUserBody.FirstName,
-		LastName:   updateUserBody.LastName,
-		Height:     updateUserBody.Height,
-		Gender:     updateUserBody.Gender,
-		Email:      updateUserBody.Email,
-		Birthday:   birthday,
-		CommonName: updateUserBody.CommonName,
-		Password:   password,
+		FirstName:      updateUserBody.FirstName,
+		LastName:       updateUserBody.LastName,
+		Height:         updateUserBody.Height,
+		Gender:         updateUserBody.Gender,
+		Email:          updateUserBody.Email,
+		CommonName:     updateUserBody.CommonName,
+		DisplayPicture: updateUserBody.DisplayPicture,
+		Password:       password,
+		Birthday:       birthday,
 	}
 
 	var user models.User

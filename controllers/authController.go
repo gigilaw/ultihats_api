@@ -31,13 +31,13 @@ func UserEmailRegister(c *gin.Context) {
 	}
 	passwordHash, err := models.HashPassword(newUserBody.Password)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, handlers.ErrorMessage("ERROR_HASH_PASSWORD", "Failed to hash password"))
+		c.JSON(http.StatusBadRequest, handlers.ErrorMessage(config.ERROR_HASH_PASSWORD["message"], config.ERROR_HASH_PASSWORD["details"]))
 		return
 	}
 
 	birthday, err := models.ParseBirthday(newUserBody.Birthday)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, handlers.ErrorMessage("ERROR_PARSE_BIRTHDAY", "Failed to parse birthday"))
+		c.JSON(http.StatusBadRequest, handlers.ErrorMessage(config.ERROR_PARSE_BIRTHDAY["message"], config.ERROR_PARSE_BIRTHDAY["details"]))
 		return
 	}
 
