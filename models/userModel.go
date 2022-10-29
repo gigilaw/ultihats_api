@@ -20,6 +20,7 @@ type User struct {
 	CommonName     string    `gorm:"type:varchar(255)"`
 	DisplayPicture string    `gorm:"type:varchar(255)"`
 	OtherInfo      datatypes.JSON
+	DiscSkills     DiscSkills
 }
 
 func HashPassword(password string) (string, error) {

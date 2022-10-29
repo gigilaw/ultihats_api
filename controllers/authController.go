@@ -61,7 +61,7 @@ func UserLogin(c *gin.Context) {
 	}
 
 	var user models.User
-	initializers.DB.First(&user, "email = ?", login.Email)
+	initializers.DB.Preload("DiscSkills").First(&user, "email = ?", login.Email)
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(login.Password)); err != nil || user.ID == 0 {
 		c.JSON(http.StatusUnauthorized, handlers.ErrorMessage(config.ERROR_INVALID_LOGIN["message"], config.ERROR_INVALID_LOGIN["details"]))
@@ -82,7 +82,5 @@ func UserLogin(c *gin.Context) {
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("Authorization", tokenString, 3600*24*30, "", "", false, true)
 
-	c.JSON(http.StatusOK, gin.H{
-		"login": "Login Success",
-	})
+	c.JSON(http.StatusOK, &user)
 }
