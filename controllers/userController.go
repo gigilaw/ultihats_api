@@ -14,7 +14,7 @@ import (
 
 func GetUser(c *gin.Context) {
 	var user models.User
-	initializers.DB.First(&user, c.Param("userID"))
+	initializers.DB.Preload("DiscSkills").First(&user, c.Param("userID"))
 
 	c.JSON(http.StatusOK, gin.H{
 		"user": user,

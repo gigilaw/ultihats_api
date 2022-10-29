@@ -22,5 +22,7 @@ func ApiRoutes(router *gin.Engine) {
 	{
 		authenticated.GET("/user/:userID", controllers.GetUser)
 		authenticated.POST("/user/:userID", middleware.AuthorizedUser, controllers.UpdateUser)
+
+		authenticated.POST("/disc-skills", controllers.UpsertDiscSkills)
 	}
 }
