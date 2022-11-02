@@ -1,17 +1,17 @@
 package validation
 
 var NewUserBody struct {
-	FirstName  string `binding:"required"`
-	LastName   string `binding:"required"`
-	Height     int    `binding:"required"`
-	Gender     string `binding:"required"`
-	Email      string `binding:"required,email"`
-	Password   string `binding:"required,alphanum,min=8"`
-	CommonName string `binding:"omitempty,alpha"`
-	Birthday   string `binding:"required"`
+	FirstName  string `binding:"required" form:"firstName"`
+	LastName   string `binding:"required" form:"lastName"`
+	Height     int    `binding:"required" form:"height"`
+	Gender     string `binding:"required" form:"gender"`
+	Email      string `binding:"required,email" form:"email"`
+	Password   string `binding:"required,alphanum,min=8" form:"password"`
+	CommonName string `binding:"omitempty,alpha" form:"commonName"`
+	Birthday   string `binding:"required" form:"birthday"`
 }
 
 var Login struct {
-	Email    string `binding:"required"`
-	Password string `binding:"required"`
+	Email    string `binding:"required" form:"email"`
+	Password string `binding:"required" form:"password"`
 }
