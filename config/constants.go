@@ -1,3 +1,3 @@
 package config
 
-const SUCCESS = "success"
+var Roles = map[string]string{"USER": "user", "ORGANIZATION": "organization"}

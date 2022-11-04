@@ -51,7 +51,7 @@ func UpdateUser(c *gin.Context) {
 
 	var password string
 	if len(updateUserBody.Password) > 0 {
-		hashedPassword, err := models.HashPassword(updateUserBody.Password)
+		hashedPassword, err := handlers.HashPassword(updateUserBody.Password)
 
 		if err != nil {
 			c.JSON(http.StatusBadRequest, handlers.ErrorMessage(config.ERROR_HASH_PASSWORD["message"], config.ERROR_HASH_PASSWORD["details"]))
