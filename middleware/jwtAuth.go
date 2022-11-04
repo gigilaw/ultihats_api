@@ -40,6 +40,8 @@ func JWTAuth(c *gin.Context) {
 		}
 
 		c.Set("user", user)
+		c.Set("role", claims["role"])
+
 		c.Next()
 	} else {
 		fmt.Println(err)
