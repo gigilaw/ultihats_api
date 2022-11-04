@@ -3,7 +3,6 @@ package models
 import (
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -21,11 +20,6 @@ type User struct {
 	DisplayPicture string    `gorm:"type:varchar(255)"`
 	OtherInfo      datatypes.JSON
 	DiscSkills     DiscSkills
-}
-
-func HashPassword(password string) (string, error) {
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
-	return string(passwordHash), err
 }
 
 func ParseBirthday(birthday string) (time.Time, error) {
