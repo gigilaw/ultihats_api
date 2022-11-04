@@ -2,8 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"os"
-	"time"
 
 	"github.com/gigilaw/ultihats/config"
 	"github.com/gigilaw/ultihats/handlers"
@@ -11,8 +9,6 @@ import (
 	"github.com/gigilaw/ultihats/models"
 	"github.com/gigilaw/ultihats/validation"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v4"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func UserEmailRegister(c *gin.Context) {
@@ -22,7 +18,7 @@ func UserEmailRegister(c *gin.Context) {
 		return
 	}
 
-	passwordHash, err := models.HashPassword(newUser.Password)
+	passwordHash, err := handlers.HashPassword(newUser.Password)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, handlers.ErrorMessage(config.ERROR_HASH_PASSWORD["message"], config.ERROR_HASH_PASSWORD["details"]))
 		return
@@ -42,7 +38,7 @@ func UserEmailRegister(c *gin.Context) {
 		Email:      newUser.Email,
 		Birthday:   birthday,
 		CommonName: newUser.CommonName,
-		Password:   string(passwordHash),
+		Password:   passwordHash,
 	}
 
 	if result := initializers.DB.Create(&user); result.Error != nil {
@@ -63,24 +59,59 @@ func UserLogin(c *gin.Context) {
 	var user models.User
 	initializers.DB.Preload("DiscSkills").First(&user, "email = ?", login.Email)
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(login.Password)); err != nil || user.ID == 0 {
-		c.JSON(http.StatusUnauthorized, handlers.ErrorMessage(config.ERROR_INVALID_LOGIN["message"], config.ERROR_INVALID_LOGIN["details"]))
+	if !handlers.JwtToken(c, config.Roles["USER"], &user.Password, &login.Password, &user.ID) {
 		return
 	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.ID,
-		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
-	})
-
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, handlers.ErrorMessage("ERROR_CREATE_TOKEN", "Failed to create token"))
-		return
-	}
-
-	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("Authorization", tokenString, 3600*24*30, "", "", false, true)
 
 	c.JSON(http.StatusOK, &user)
+}
+
+func OrganizationRegister(c *gin.Context) {
+	newOrganization := validation.NewOrganizationBody
+
+	if err := c.ShouldBind(&newOrganization); err != nil {
+		c.JSON(http.StatusBadRequest, handlers.ErrorMessage(config.ERROR_VALIDATION["message"], err.Error()))
+		return
+	}
+
+	passwordHash, err := handlers.HashPassword(newOrganization.Password)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, handlers.ErrorMessage(config.ERROR_HASH_PASSWORD["message"], config.ERROR_HASH_PASSWORD["details"]))
+		return
+	}
+
+	organization := models.Organization{
+		Name:           newOrganization.Name,
+		Email:          newOrganization.Email,
+		Password:       passwordHash,
+		City:           newOrganization.City,
+		Est:            newOrganization.Est,
+		Facebook:       newOrganization.Facebook,
+		Instagram:      newOrganization.Instagram,
+		DisplayPicture: newOrganization.DisplayPicture,
+	}
+
+	if result := initializers.DB.Create(&organization); result.Error != nil {
+		c.JSON(http.StatusBadRequest, handlers.ErrorMessage(config.ERROR_DATABASE["message"], result.Error.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, &organization)
+}
+
+func OrganizationLogin(c *gin.Context) {
+	login := validation.Login
+	if err := c.ShouldBind(&login); err != nil {
+		c.JSON(http.StatusBadRequest, handlers.ErrorMessage(config.ERROR_VALIDATION["message"], err.Error()))
+		return
+	}
+
+	var organization models.Organization
+	initializers.DB.First(&organization, "email = ?", login.Email)
+
+	if !handlers.JwtToken(c, config.Roles["ORGANIZATION"], &organization.Password, &login.Password, &organization.ID) {
+		return
+	}
+
+	c.JSON(http.StatusOK, &organization)
 }

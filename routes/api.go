@@ -20,6 +20,9 @@ func ApiRoutes() *gin.Engine {
 	r.POST("/register/email", controllers.UserEmailRegister)
 	r.POST("/login", controllers.UserLogin)
 
+	r.POST("/organization/register", controllers.OrganizationRegister)
+	r.POST("/organization/login", controllers.OrganizationLogin)
+
 	authenticated := r.Group("/").Use(middleware.JWTAuth)
 	{
 		authenticated.GET("/me", controllers.Me)

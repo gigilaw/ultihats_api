@@ -11,6 +11,17 @@ var NewUserBody struct {
 	Birthday   string `binding:"required" form:"birthday"`
 }
 
+var NewOrganizationBody struct {
+	Name           string `binding:"required" form:"name"`
+	Email          string `binding:"required,email" form:"email"`
+	Password       string `binding:"required,alphanum,min=8" form:"password"`
+	Est            int    `binding:"required" form:"est"`
+	City           string `binding:"required" form:"city"`
+	Facebook       string `form:"facebook"`
+	Instagram      string `form:"instagram"`
+	DisplayPicture string `form:"displayPicture"`
+}
+
 var Login struct {
 	Email    string `binding:"required" form:"email"`
 	Password string `binding:"required" form:"password"`
