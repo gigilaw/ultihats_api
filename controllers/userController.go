@@ -12,6 +12,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func Me(c *gin.Context) {
+	user, _ := c.Get("user")
+
+	c.JSON(http.StatusOK, gin.H{
+		"user": user,
+	})
+}
+
 func GetUser(c *gin.Context) {
 	var user models.User
 	initializers.DB.Preload("DiscSkills").First(&user, c.Param("userID"))

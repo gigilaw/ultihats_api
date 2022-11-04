@@ -12,8 +12,9 @@ import (
 )
 
 func UpsertDiscSkills(c *gin.Context) {
-	user, _ := c.Get("user")
-	userId := user.(models.User).ID
+	userValue, _ := c.Get("user")
+	user := models.User(userValue.(models.User))
+	userId := user.ID
 
 	discSkillsValidation := validation.UpsertDiscSkills
 	if err := c.ShouldBind(&discSkillsValidation); err != nil {
@@ -37,7 +38,9 @@ func UpsertDiscSkills(c *gin.Context) {
 		return
 	}
 
+	user.DiscSkills = discSkills
+
 	c.JSON(http.StatusOK, gin.H{
-		"status": config.SUCCESS,
+		"user": user,
 	})
 }
