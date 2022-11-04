@@ -34,7 +34,7 @@ func JWTAuth(c *gin.Context) {
 		}
 
 		var user models.User
-		initializers.DB.First(&user, claims["sub"])
+		initializers.DB.Preload("DiscSkills").First(&user, claims["sub"])
 		if user.ID == 0 {
 			c.AbortWithStatus(http.StatusUnauthorized)
 		}

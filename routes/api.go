@@ -22,6 +22,8 @@ func ApiRoutes() *gin.Engine {
 
 	authenticated := r.Group("/").Use(middleware.JWTAuth)
 	{
+		authenticated.GET("/me", controllers.Me)
+
 		authenticated.GET("/user/:userID", controllers.GetUser)
 		authenticated.POST("/user/:userID", middleware.AuthorizedUser, controllers.UpdateUser)
 
