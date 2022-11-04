@@ -14,5 +14,6 @@ func main() {
 	initializers.DB.AutoMigrate(
 		&models.User{},
 		&models.DiscSkills{},
+		&models.Organization{},
 	)
 }
